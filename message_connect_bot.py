@@ -89,7 +89,7 @@ def decorate_confirmation(function, db_handler):
             )
 
             return ConversationHandler.END
-        return wrapper
+    return wrapper
 
 
 def do_confirmation(update, context):
@@ -111,8 +111,7 @@ def cancel(update, context):
     return ConversationHandler.END
 
 
-# Main logic
-def main():
+if __name__ == '__main__':
     # Getting credentails and configurations from config file
     creds_and_params = get_credentials_and_configurations()
 
@@ -126,7 +125,7 @@ def main():
     dp.add_error_handler(error)
 
     # decorating do_confirmation with init db
-    do_confirmation = decorate_confirmation(do_confirmation, db_handler= dbms_handler)
+    do_confirmation = decorate_confirmation(do_confirmation, db_handler=dbms_handler)
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start), CommandHandler("add_new_account", add_new_account)],
@@ -144,7 +143,3 @@ def main():
     # Start the Bot
     updater.start_polling(poll_interval=5)
     updater.idle()
-
-
-if __name__ == '__main__':
-    main()
