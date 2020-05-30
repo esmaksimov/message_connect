@@ -124,6 +124,7 @@ def main():
     )
     dp.add_handler(conv_handler)
     dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler('cancel', cancel))
 
     # Start the Bot
     updater.start_polling(poll_interval=5)
