@@ -117,9 +117,6 @@ if __name__ == '__main__':
 
     # Init database
     dbms_handler = DBConnection(creds_and_params, logger)
-    _, cur = dbms_handler.get_sqlite_conn_and_cursor()
-    cur.execute('SELECT * FROM gmail_accounts')
-    print(cur.fetchall())
     updater = Updater(creds_and_params['bot_token'], use_context=True)
 
     # Adding handler
