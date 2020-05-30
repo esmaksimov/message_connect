@@ -11,28 +11,35 @@ class DBConnection:
     )
     '''
 
-    sql_add_account = 'INSERT INTO gmail_accounts(account_name, token) VALUES (%s, %s)'
+    sql_add_account = 'INSERT INTO gmail_accounts(account_name, token) VALUES (?, ?)'
 
     def __init__(self, creds_and_params, logger):
         self.__creds_and_params = creds_and_params
         self.__logger = logger
         try:
-            self.get_sqlite_cursor().execute(DBConnection.sql_init_query)
+            _, cur = self.get_sqlite_conn_and_cursor()
+            cur.execute(DBConnection.sql_init_query)
         except sqlite3.Error as e:
             self.__logger.exception(f"Error occurs during init of db file: {e}")
             sys.exit()
 
-    def get_sqlite_cursor(self):
+    def get_sqlite_conn_and_cursor(self):
         try:
-            with sqlite3.connect(self.__creds_and_params['sqlite_db_name']) as conn:
-                cur = conn.cursor()
-                return cur
+            conn = sqlite3.connect(self.__creds_and_params['sqlite_db_name']):
+            cur = conn.cursor()
+            return conn, cur
         except sqlite3.Error as e:
             self.__logger.exception(f'Error occurs during establishing connection and getting cursor {e}')
 
+    def commit_and_close_connection(self, conn):
+        conn.commit()
+        conn.close()
+
     def add_account(self, account_name, token):
         try:
-            self.get_sqlite_cursor().execute(DBConnection.sql_add_account, (account_name, token))
+            conn, cur = self.get_sqlite_conn_and_cursor()
+            cur.execute(DBConnection.sql_add_account, (account_name, token))
+            self.commit_and_close_connection(conn)
             return True
         except sqlite3.Error as e:
             self.__logger.exception(e)
