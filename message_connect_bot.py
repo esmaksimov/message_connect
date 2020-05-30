@@ -68,31 +68,43 @@ def add_account_token(update, context):
     return CONFIRMATION
 
 
+def decorate_confirmation(function, db_handler):
+    def wrapper(**kwargs):
+        decision = function(**kwargs)
+        if decision and add_account_to_db(
+                db_handler,
+                context.user_data['name_of_account'],
+                context.user_data['token_of_account']
+        ):
+            update.message.reply_text(
+                "Account was added"
+            )
+        else:
+            if 'name_of_account' in context.user_data:
+                del context.user_data['name_of_account']
+            if 'token_of_account' in context.user_data:
+                del context.user_data['token_of_account']
+            update.message.reply_text(
+                "Information typed previously was deleted. call /add_new_account to try again."
+            )
+
+            return ConversationHandler.END
+        return wrapper
+
+
 def do_confirmation(update, context):
     confirmation = update.message.text
     if confirmation.lower() == 'yes':
-        add_account_to_db(context.user_data['name_of_account'], context.user_data['token_of_account'])
-        update.message.reply_text(
-            "Account was added"
-        )
+        return True
     else:
-        if 'name_of_account' in context.user_data:
-            del context.user_data['name_of_account']
-        if 'token_of_account' in context.user_data:
-            del context.user_data['token_of_account']
-        update.message.reply_text(
-            "Information typed previously was deleted. call /add_new_account to try again."
-        )
-
-    return ConversationHandler.END
+        return False
 
 
-def add_account_to_db(name, token):
-    pass
+def add_account_to_db(dbms_handler, name, token):
+    return dbms_handler.add_account(name, token)
 
 
 def cancel(update, context):
-    user = update.message.from_user
     logger.info("Conversation was cancelled")
     update.message.reply_text('Bye!')
 
@@ -113,12 +125,15 @@ def main():
     dp = updater.dispatcher
     dp.add_error_handler(error)
 
+    # decorating do_confirmation with init db
+    do_confirmation = decorate_confirmation(do_confirmation, db_handler= dbms_handler)
+
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start), CommandHandler("add_new_account", add_new_account)],
         states={
             ADDINGNAME: [MessageHandler(Filters.text, add_account_name)],
             ADDINGPASS: [MessageHandler(Filters.text, add_account_token)],
-            CONFIRMATION: [MessageHandler(Filters.text, do_confirmation)],
+            CONFIRMATION: [MessageHandler(Filters.text, do_confirmation)]
         },
         fallbacks=[CommandHandler('cancel', cancel)]
     )
