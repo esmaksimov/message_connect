@@ -25,7 +25,7 @@ class DBConnection:
 
     def get_sqlite_conn_and_cursor(self):
         try:
-            conn = sqlite3.connect(self.__creds_and_params['sqlite_db_name']):
+            conn = sqlite3.connect(self.__creds_and_params['sqlite_db_name'])
             cur = conn.cursor()
             return conn, cur
         except sqlite3.Error as e:
