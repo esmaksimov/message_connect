@@ -69,8 +69,8 @@ def add_account_token(update, context):
 
 
 def decorate_confirmation(function, db_handler):
-    def wrapper(**kwargs):
-        decision = function(**kwargs)
+    def wrapper(update, context):
+        decision = function(update, context)
         if decision and add_account_to_db(
                 db_handler,
                 context.user_data['name_of_account'],
@@ -117,7 +117,9 @@ if __name__ == '__main__':
 
     # Init database
     dbms_handler = DBConnection(creds_and_params, logger)
-
+    _, cur = dbms_handler.get_sqlite_conn_and_cursor()
+    cur.execute('SELECT * FROM gmail_accounts')
+    print(cur.fetchall())
     updater = Updater(creds_and_params['bot_token'], use_context=True)
 
     # Adding handler
